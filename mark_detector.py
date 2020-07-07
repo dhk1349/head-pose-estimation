@@ -1,8 +1,8 @@
-"""Human facial landmark detector based on Convulutional Neural Network."""
+"""Human facial landmark detector based on Convolutional Neural Network."""
+import cv2
 import numpy as np
 import tensorflow as tf
-
-import cv2
+from tensorflow import keras
 
 
 class FaceDetector:
@@ -63,7 +63,7 @@ class FaceDetector:
 class MarkDetector:
     """Facial landmark detector by Convolutional Neural Network"""
 
-    def __init__(self, mark_model='assets/frozen_inference_graph.pb'):
+    def __init__(self, saved_model='assets/pose_model'):
         """Initialization"""
         # A face detector is required for mark detection.
         self.face_detector = FaceDetector()
@@ -71,17 +71,8 @@ class MarkDetector:
         self.cnn_input_size = 128
         self.marks = None
 
-        # Get a TensorFlow session ready to do landmark detection
-        # Load a (frozen) Tensorflow model into memory.
-        detection_graph = tf.Graph()
-        with detection_graph.as_default():
-            od_graph_def = tf.GraphDef()
-            with tf.gfile.GFile(mark_model, 'rb') as fid:
-                serialized_graph = fid.read()
-                od_graph_def.ParseFromString(serialized_graph)
-                tf.import_graph_def(od_graph_def, name='')
-        self.graph = detection_graph
-        self.sess = tf.Session(graph=detection_graph)
+        # Restore model from the saved_model file.
+        self.model = keras.models.load_model(saved_model)
 
     @staticmethod
     def draw_box(image, boxes, box_color=(255, 255, 255)):
@@ -89,7 +80,7 @@ class MarkDetector:
         for box in boxes:
             cv2.rectangle(image,
                           (box[0], box[1]),
-                          (box[2], box[3]), box_color)
+                          (box[2], box[3]), box_color, 3)
 
     @staticmethod
     def move_box(box, offset):
@@ -147,8 +138,8 @@ class MarkDetector:
 
         for box in raw_boxes:
             # Move box down.
-            diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
-            offset_y = int(abs(diff_height_width / 2))
+            # diff_height_width = (box[3] - box[1]) - (box[2] - box[0])
+            offset_y = int(abs((box[3] - box[1]) * 0.1))
             box_moved = self.move_box(box, [0, offset_y])
 
             # Make box square.
@@ -161,16 +152,13 @@ class MarkDetector:
 
     def detect_marks(self, image_np):
         """Detect marks from image"""
-        # Get result tensor by its name.
-        logits_tensor = self.graph.get_tensor_by_name('logits/BiasAdd:0')
 
-        # Actual detection.
-        predictions = self.sess.run(
-            logits_tensor,
-            feed_dict={'input_image_tensor:0': image_np})
+        # # Actual detection.
+        predictions = self.model.signatures["predict"](
+            tf.constant(image_np, dtype=tf.uint8))
 
         # Convert predictions to landmarks.
-        marks = np.array(predictions).flatten()
+        marks = np.array(predictions['output']).flatten()[:136]
         marks = np.reshape(marks, (-1, 2))
 
         return marks

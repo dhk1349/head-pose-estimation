@@ -2,8 +2,53 @@
 
 This repo shows how to estimate human head pose from videos using TensorFlow and OpenCV.
 
-![demo](https://github.com/yinguobing/head-pose-estimation/raw/master/demo.gif)
-![demo](https://github.com/yinguobing/head-pose-estimation/raw/master/demo1.gif)
+![demo](doc/demo.gif)
+![demo](doc/demo1.gif)
+
+## Getting Started
+
+The following packages are required:
+
+- TensorFlow 2.2
+- OpenCV 4.3
+- Python 3.6
+
+The code is tested in Ubuntu 18.04.
+
+## Installing
+
+This repository comes with a pre-trained model for facial landmark detection.
+
+```bash
+# From your favorite development directory:
+git clone https://github.com/yinguobing/head-pose-estimation.git
+```
+
+And for face mesh detection, a third party model from Google's mediapipe is required:
+
+https://github.com/google/mediapipe/blob/master/mediapipe/models/face_landmark.tflite
+
+Put this model file in the `assets` directory, or set the model path using `--mesh_model`.
+
+## Running
+
+A video file or a webcam index should be assigned through arguments. If no source provided, the default webcam will be used.
+
+### For video file
+
+For any video format that OpenCV supported (`mp4`, `avi` etc.):
+
+```bash
+python3 estimate_head_pose.py --video /path/to/video.mp4
+```
+
+### For webcam
+
+The webcam index should be assigned:
+
+```bash
+python3 estimate_head_pose.py --cam 0
+``` 
 
 ## How it works
 
@@ -15,13 +60,25 @@ There are three major steps:
 
 3. Pose estimation. Once we got the 68 facial landmarks, a mutual PnP algorithms is adopted to calculate the pose.
 
-## Miscellaneous
-- The marks is detected frame by frame, which result in small variance between adjacent frames. This makes the pose unstaible. A Kalman filter is used to solve this problem, you can draw the original pose to observe the difference.
+The marks is detected frame by frame, which result in small variance between adjacent frames. This makes the pose unstable. A Kalman filter is used to solve this problem, you can draw the original pose to observe the difference.
 
-- The 3D model of face comes from OpenFace, you can find the original file [here](https://github.com/TadasBaltrusaitis/OpenFace/blob/master/lib/local/LandmarkDetector/model/pdms/In-the-wild_aligned_PDM_68.txt).
+## Retrain the model
+
+To reproduce the facial landmark detection model, you can refer to this [series](https://yinguobing.com/deeplearning/) of posts(in Chinese only). And the training code is also open sourced: https://github.com/yinguobing/cnn-facial-landmark
+
 
 ## License
-The code is licensed under the MIT license. However, the pre-trained TensorFlow model file is trained with various public data sets which have their own licenses. Please refer to them before using this code.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+The face mesh model is from Google's MediaPipe, you can find the license [here](https://github.com/google/mediapipe).
+
+## Authors
+Yin Guobing (尹国冰) - [yinguobing](https://yinguobing.com)
+
+![](doc/wechat_logo.png)
+
+## Acknowledgments
+The pre-trained TensorFlow model file is trained with various public data sets which have their own licenses. Please refer to them before using this code.
 
 - 300-W: https://ibug.doc.ic.ac.uk/resources/300-W/
 - 300-VW: https://ibug.doc.ic.ac.uk/resources/300-VW/
@@ -29,3 +86,8 @@ The code is licensed under the MIT license. However, the pre-trained TensorFlow 
 - HELEN: http://www.ifp.illinois.edu/~vuongle2/helen/
 - AFW: https://www.ics.uci.edu/~xzhu/face/
 - IBUG: https://ibug.doc.ic.ac.uk/resources/facial-point-annotations/
+
+The 3D model of face comes from OpenFace, you can find the original file [here](https://github.com/TadasBaltrusaitis/OpenFace/blob/master/lib/local/LandmarkDetector/model/pdms/In-the-wild_aligned_PDM_68.txt).
+
+The build in face detector comes from OpenCV. 
+https://github.com/opencv/opencv/tree/master/samples/dnn/face_detector

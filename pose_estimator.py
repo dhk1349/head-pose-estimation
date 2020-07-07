@@ -1,7 +1,6 @@
 """Estimate head pose according to the facial landmarks"""
-import numpy as np
-
 import cv2
+import numpy as np
 
 
 class PoseEstimator:
@@ -15,9 +14,9 @@ class PoseEstimator:
             (0.0, 0.0, 0.0),             # Nose tip
             (0.0, -330.0, -65.0),        # Chin
             (-225.0, 170.0, -135.0),     # Left eye left corner
-            (225.0, 170.0, -135.0),      # Right eye right corne
-            (-150.0, -150.0, -125.0),    # Left Mouth corner
-            (150.0, -150.0, -125.0)      # Right mouth corner
+            (225.0, 170.0, -135.0),      # Right eye right corner
+            (-150.0, -150.0, -125.0),    # Mouth left corner
+            (150.0, -150.0, -125.0)      # Mouth right corner
         ]) / 4.5
 
         self.model_points_68 = self._get_full_model_points()
@@ -48,16 +47,34 @@ class PoseEstimator:
                 raw_value.append(line)
         model_points = np.array(raw_value, dtype=np.float32)
         model_points = np.reshape(model_points, (3, -1)).T
-        # model_points *= 4
-        model_points[:, -1] *= -1
+
+        # Transform the model into a front view.
+        model_points[:, 2] *= -1
 
         return model_points
+
+    def show_3d_model(self):
+        from matplotlib import pyplot
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = pyplot.figure()
+        ax = Axes3D(fig)
+
+        x = self.model_points_68[:, 0]
+        y = self.model_points_68[:, 1]
+        z = self.model_points_68[:, 2]
+
+        ax.scatter(x, y, z)
+        ax.axis('square')
+        pyplot.xlabel('x')
+        pyplot.ylabel('y')
+        pyplot.show()
 
     def solve_pose(self, image_points):
         """
         Solve pose from image points
         Return (rotation_vector, translation_vector) as pose.
         """
+        assert image_points.shape[0] == self.model_points_68.shape[0], "3D points and 2D points should be of same number."
         (_, rotation_vector, translation_vector) = cv2.solvePnP(
             self.model_points, image_points, self.camera_matrix, self.dist_coeefs)
 
@@ -131,6 +148,24 @@ class PoseEstimator:
         cv2.line(image, tuple(point_2d[3]), tuple(
             point_2d[8]), color, line_width, cv2.LINE_AA)
 
+    def draw_axis(self, img, R, t):
+        points = np.float32(
+            [[30, 0, 0], [0, 30, 0], [0, 0, 30], [0, 0, 0]]).reshape(-1, 3)
+
+        axisPoints, _ = cv2.projectPoints(
+            points, R, t, self.camera_matrix, self.dist_coeefs)
+
+        img = cv2.line(img, tuple(axisPoints[3].ravel()), tuple(
+            axisPoints[0].ravel()), (255, 0, 0), 3)
+        img = cv2.line(img, tuple(axisPoints[3].ravel()), tuple(
+            axisPoints[1].ravel()), (0, 255, 0), 3)
+        img = cv2.line(img, tuple(axisPoints[3].ravel()), tuple(
+            axisPoints[2].ravel()), (0, 0, 255), 3)
+
+    def draw_axes(self, img, R, t):
+        img	= cv2.drawFrameAxes(img, self.camera_matrix, self.dist_coeefs, R, t, 30)
+
+
     def get_pose_marks(self, marks):
         """Get marks ready for pose estimation from 68 marks"""
         pose_marks = []
@@ -138,6 +173,6 @@ class PoseEstimator:
         pose_marks.append(marks[8])     # Chin
         pose_marks.append(marks[36])    # Left eye left corner
         pose_marks.append(marks[45])    # Right eye right corner
-        pose_marks.append(marks[48])    # Left Mouth corner
-        pose_marks.append(marks[54])    # Right mouth corner
+        pose_marks.append(marks[48])    # Mouth left corner
+        pose_marks.append(marks[54])    # Mouth right corner
         return pose_marks
