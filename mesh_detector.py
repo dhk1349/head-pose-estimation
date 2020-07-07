@@ -51,9 +51,9 @@ class MeshDetector(object):
         self.interpreter.invoke()
 
         # Save the results.
-        mesh = self.interpreter.tensor(self.output_details[0]["index"])()[
+        mesh = self.interpreter.get_tensor(self.output_details[0]["index"])[
             0].reshape(468, 3) / 192
-        score = self.interpreter.tensor(self.output_details[1]["index"])()[0]
+        score = self.interpreter.get_tensor(self.output_details[1]["index"])[0]
 
         return mesh, score
 

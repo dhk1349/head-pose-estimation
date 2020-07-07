@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 
 from mark_detector import MarkDetector
+from mesh_detector import MeshDetector
 from os_detector import detect_os
 from pose_estimator import PoseEstimator
 from stabilizer import Stabilizer
@@ -29,6 +30,9 @@ parser.add_argument("--video", type=str, default=None,
                     help="Video file to be processed.")
 parser.add_argument("--cam", type=int, default=None,
                     help="The webcam index.")
+parser.add_argument("--mesh_model", type=str,
+                    default="./assets/face_landmark.tflite",
+                    help="The face mesh model.")
 args = parser.parse_args()
 
 
@@ -54,7 +58,10 @@ def main():
     _, sample_frame = cap.read()
 
     # Introduce mark_detector to detect landmarks.
-    mark_detector = MarkDetector()
+    mark_detector = MarkDetector(saved_model='assets/pose_model')
+
+    # Construct a face mesh detector.
+    mesh_detector = MeshDetector(model_path=args.mesh_model)
 
     # Setup process and queues for multiprocessing.
     img_queue = Queue()
@@ -103,9 +110,14 @@ def main():
         facebox = box_queue.get()
 
         if facebox is not None:
-            # Detect landmarks from image of 128x128.
+            # Crop the facial area from the detection result.
             face_img = frame[facebox[1]: facebox[3],
                              facebox[0]: facebox[2]]
+
+            # Do mesh detection.
+            mesh, mesh_score = mesh_detector.get_mesh(face_img)
+
+            # Detect landmarks from image of 128x128.
             face_img = cv2.resize(face_img, (CNN_INPUT_SIZE, CNN_INPUT_SIZE))
             face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
 
@@ -113,10 +125,16 @@ def main():
             marks = mark_detector.detect_marks([face_img])
             tm.stop()
 
-            # Convert the marks locations from local CNN to global image.
+            # Convert the marks locations from local ROI to global image.
             marks *= (facebox[2] - facebox[0])
             marks[:, 0] += facebox[0]
             marks[:, 1] += facebox[1]
+
+            mesh *= (facebox[2] - facebox[0])
+            mesh[:, 0] += facebox[0]
+            mesh[:, 1] += facebox[1]
+
+            mark_detector.draw_marks(frame, mesh, color=(0, 255, 0))
 
             # Uncomment following line to show raw marks.
             # mark_detector.draw_marks(
