@@ -17,12 +17,18 @@ The code is tested in Ubuntu 18.04.
 
 ## Installing
 
-This repository comes with a pre-trained model for facial landmark detection. Just git clone then you are good to go.
+This repository comes with a pre-trained model for facial landmark detection.
 
 ```bash
 # From your favorite development directory:
 git clone https://github.com/yinguobing/head-pose-estimation.git
 ```
+
+And for face mesh detection, a third party model from Google's mediapipe is required:
+
+https://github.com/google/mediapipe/blob/master/mediapipe/models/face_landmark.tflite
+
+Put this model file in the `assets` directory, or set the model path using `--mesh_model`.
 
 ## Running
 
@@ -63,6 +69,8 @@ To reproduce the facial landmark detection model, you can refer to this [series]
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+
+The face mesh model is from Google's MediaPipe, you can find the license [here](https://github.com/google/mediapipe).
 
 ## Authors
 Yin Guobing (尹国冰) - [yinguobing](https://yinguobing.com)
