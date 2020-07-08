@@ -111,6 +111,12 @@ def main():
 
         if facebox is not None:
             # Crop the facial area from the detection result.
+            box_width = facebox[3] - facebox[1]
+            e = int(box_width * 0.1)
+            facebox[0] -= e
+            facebox[1] -= e
+            facebox[2] += e
+            facebox[3] += e
             face_img = frame[facebox[1]: facebox[3],
                              facebox[0]: facebox[2]]
 
