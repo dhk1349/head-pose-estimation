@@ -1,6 +1,7 @@
 """A sample module of loading the TFLite model of FaceMesh from Google."""
 import cv2
 import tensorflow as tf
+import numpy as np
 
 
 class MeshDetector(object):
@@ -66,4 +67,40 @@ class MeshDetector(object):
         for point in mesh:
             cv2.circle(image, (point[0], point[1]), 2, (0, 255, 128), -1)
 
-        # TODO: draw the conter lines.
+        # Draw the contours.
+        # Eyes
+        left_eye_contour = np.array([mesh[33][0:2],
+                                     mesh[7][0:2],
+                                     mesh[163][0:2],
+                                     mesh[144][0:2],
+                                     mesh[145][0:2],
+                                     mesh[153][0:2],
+                                     mesh[154][0:2],
+                                     mesh[155][0:2],
+                                     mesh[133][0:2],
+                                     mesh[173][0:2],
+                                     mesh[157][0:2],
+                                     mesh[158][0:2],
+                                     mesh[159][0:2],
+                                     mesh[160][0:2],
+                                     mesh[161][0:2],
+                                     mesh[246][0:2], ]).astype(np.int32)
+        right_eye_contour = np.array([mesh[263][0:2],
+                                      mesh[249][0:2],
+                                      mesh[390][0:2],
+                                      mesh[373][0:2],
+                                      mesh[374][0:2],
+                                      mesh[380][0:2],
+                                      mesh[381][0:2],
+                                      mesh[382][0:2],
+                                      mesh[362][0:2],
+                                      mesh[398][0:2],
+                                      mesh[384][0:2],
+                                      mesh[385][0:2],
+                                      mesh[386][0:2],
+                                      mesh[387][0:2],
+                                      mesh[388][0:2],
+                                      mesh[466][0:2]]).astype(np.int32)
+        # Lips
+        cv2.polylines(image, [left_eye_contour, right_eye_contour], False,
+                      (255, 255, 255), 1, cv2.LINE_AA)
