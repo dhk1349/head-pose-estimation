@@ -63,7 +63,7 @@ class MeshDetector(object):
         # The mesh are normalized which means we need to convert it back to fit
         # the image size.
         image_size = image.shape[0]
-        mesh *= image_size
+        mesh = mesh * image_size
         for point in mesh:
             cv2.circle(image, (point[0], point[1]), 2, (0, 255, 128), -1)
 
