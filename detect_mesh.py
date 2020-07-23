@@ -1,6 +1,7 @@
 import cv2
 from mesh_detector import MeshDetector
 from matplotlib import pyplot
+import json
 
 
 if __name__ == "__main__":
@@ -13,13 +14,17 @@ if __name__ == "__main__":
     image = cv2.imread(image_file)
 
     # Note that the mesh detector is sensitive to the face box size.
-    epn_width = 0
+    epn_width = 20
     image = cv2.copyMakeBorder(image,
                                epn_width, epn_width, epn_width, epn_width,
                                cv2.BORDER_CONSTANT, value=[0, 0, 0])
 
     # Get the mesh.
     mesh, _ = md.get_mesh(image)
+
+    # # Save the mesh to file.
+    # with open("mesh.json", "w") as fid:
+    #     json.dump(mesh.flatten().tolist(), fid)
 
     # Draw the image and marks.
     fig_2d = pyplot.figure()
@@ -63,6 +68,6 @@ if __name__ == "__main__":
 
     fig_3d.canvas.mpl_connect('pick_event', on_pick)
 
-    fig_3d.savefig('mesh.eps')
+    # fig_3d.savefig('mesh.pdf')
 
     pyplot.show()
