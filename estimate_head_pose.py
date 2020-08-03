@@ -54,6 +54,7 @@ def main():
     _, sample_frame = cap.read()
 
     # Introduce mark_detector to detect landmarks.
+    #MarkDetector class contains FaceDetector class obj
     mark_detector = MarkDetector()
 
     # Setup process and queues for multiprocessing.
